@@ -27,16 +27,25 @@ on public.election_tally for update
 to authenticated
 using (
   id = 'main'
-  and (auth.jwt() ->> 'email') = 'REPLACE_WITH_ADMIN_EMAIL'
+  and (auth.jwt() ->> 'email') = 'andy0937642804@gmail.com'
 )
 with check (
   id = 'main'
-  and (auth.jwt() ->> 'email') = 'REPLACE_WITH_ADMIN_EMAIL'
+  and (auth.jwt() ->> 'email') = 'andy0937642804@gmail.com'
 );
 
 revoke all on table public.election_tally from anon, authenticated;
 grant select on table public.election_tally to anon, authenticated;
 grant update on table public.election_tally to authenticated;
 
--- Realtime 啟用（若已加入 publication，重複執行會報錯，可忽略該行）
-alter publication supabase_realtime add table public.election_tally;
+-- Realtime 啟用：若表格已加入 publication，則不重複加入。
+do $ begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'election_tally'
+  ) then
+    alter publication supabase_realtime add table public.election_tally;
+  end if;
+end $;
